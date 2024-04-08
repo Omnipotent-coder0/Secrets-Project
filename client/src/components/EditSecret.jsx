@@ -1,11 +1,12 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Cross1Icon } from '@radix-ui/react-icons'
 import axios from 'axios';
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
+import { SecretsContext } from '../context/SecretsContext';
+import { AuthenticationContext } from '../context/AuthenticationContext';
 
 const EditSecret = (props) => {
     const [open, setOpen] = useState(false);
-
     const handleEdit = async (e) => {
         e.preventDefault();
         const item = {
@@ -15,13 +16,14 @@ const EditSecret = (props) => {
         }
         try {
             const response = await axios.put(`/api/users/secrets/${props.item._id}`, item);
-            console.log(response.data);
             if (response.status == 200) {
                 setOpen(false);
+                window.location.reload();
             }
-            else console.log("Internal Server Error!");
+            else console.alert("Internal Server Error!");
         } catch (error) {
-            console.log(error);
+            if (error.response.status == 401) setIsAuthenticated(false);
+            console.error(error);
         }
     }
     return (

@@ -1,35 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthenticationContext } from '../context/AuthenticationContext';
 
 
 const LoginForm = () => {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
     const [flashMessage, setFlashMessage] = useState("");
-    // const flashMessage = "";
+    const { isAuthenticated, setIsAuthenticated } = useContext(AuthenticationContext);
     const navigate = useNavigate();
+
     useEffect(() => {
-        const isAuthenticated = async () => {
-            const { data } = await axios.get("/api/auth/status");
-            if (data.user) navigate("/private");
-        }
-        isAuthenticated();
-    }, [])
+        const getAuthentication = () => {
+            if (isAuthenticated) navigate("/private");
+        };
+        getAuthentication();
+    }, [isAuthenticated]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const userCredentials = {
+            username: e.target.username.value,
+            password: e.target.password.value
+        }
         try {
-            const response = await axios.post("/api/auth/login", { username, password });
-            console.log(response.data);
-            navigate("/private");
+            const response = await axios.post("/api/auth/login", userCredentials);
+            if (response.status == 200) {
+                await setIsAuthenticated(true);
+                try {
+                    const response = await axios.get("/api/users/secrets");
+                    if (response.status == 200) {
+                        setSecrets(response.data);
+                    }
+                    else console.alert("Internal Server Error!");
+                } catch (error) {
+                    if (error.response.status == 401) setIsAuthenticated(false);
+                    console.error(error);
+                }
+                navigate("/private");
+            }
         } catch (error) {
             if (error.response.status === 401) {
+                await setIsAuthenticated(false);
                 const messages = error.response.data.message;
                 const message = messages[messages.length - 1]
                 setFlashMessage(message);
-                console.log(message);
-                // alert(message);
-
+                console.error(error);
             }
             else alert('An error occurred. Please try again later.');
         }
@@ -40,10 +55,10 @@ const LoginForm = () => {
                 <h1 className='text-3xl font-bold text-center'>Login</h1>
                 <form className=' w-max m-4' onSubmit={handleSubmit}>
                     <label htmlFor="username">Email : </label>
-                    <input type="email" name='username' id='username' placeholder='manish@gmail.com' required={true} className='border-2 mb-4' onChange={(e) => setUsername(e.target.value)} />
+                    <input type="email" name='username' id='username' placeholder='manish@gmail.com' required={true} className='border-2 mb-4' />
                     <br />
                     <label htmlFor="password">Password : </label>
-                    <input type="password" name='password' id='password' placeholder='123456' required={true} minLength={3} maxLength={12} className='border-2 mb-4' onChange={(e) => setPassword(e.target.value)} />
+                    <input type="password" name='password' id='password' placeholder='123456' required={true} minLength={3} maxLength={12} className='border-2 mb-4' />
                     <br />
                     <div className='text-center'>
                         <button type="submit" className=' bg-blue-600 hover:bg-blue-800 p-2 px-3 font-semibold rounded-md text-white'>Submit</button>
@@ -64,9 +79,12 @@ const LoginForm = () => {
                     </div>
 
                 </form>
+                {
+                    isAuthenticated ? <h1>isAuthenticated : true</h1> : <h1>isAuthenticated : false</h1>
+                }
             </div>
         </div>
-    )
+    );
 }
 
-export default LoginForm
+export default LoginForm;

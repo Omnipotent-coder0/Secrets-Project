@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm.jsx';
 import SignupForm from './components/SignupForm.jsx';
@@ -7,12 +6,12 @@ import Navbar from './components/Navbar.jsx';
 import axios from 'axios';
 import Public from './screens/Public.jsx';
 import Private from './screens/Private.jsx';
-axios.defaults.baseURL = "http://localhost:3000/";
+import SecretsProvider from './context/SecretsContext.jsx';
+axios.defaults.baseURL = import.meta.env.VITE_SERVER_BASE_URL;
 axios.defaults.withCredentials = true;
+export const isAuthenticated = false;
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
       <Router>

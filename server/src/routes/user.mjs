@@ -17,6 +17,7 @@ router.get("/api/users", async (req, res) => {
     // if (user) return res.status(200).send(user);
     // return res.status(401).send({ message: "You are not Logged In!!" });
     const users = await User.find();
+    console.log(req.route.path, req.method, users);
     return res.status(200).send(users);
   } catch (error) {
     console.log(error);
@@ -27,13 +28,10 @@ router.get("/api/users", async (req, res) => {
 router.get("/api/users/secrets", async (req, res) => {
   const { user } = req;
   if (!user) return res.status(401).send({ error: "You are not Logged In!" });
-  const secretsArray = [];
-  for(const element of user.secrets){
-    const secret = await Secret.findOne({ _id: element });
-    secretsArray.push(secret);
-  }
-  console.log("array : ", secretsArray);
-  return res.status(200).send({secrets : secretsArray});
+  const userWithSecretsArray = await User.findOne({_id:user._id}).populate("secrets");
+  const secretsArray = userWithSecretsArray.secrets;
+  console.log(req.route.path, req.method,secretsArray);
+  return res.status(200).send(secretsArray);
 });
 
 router.post(
@@ -52,6 +50,7 @@ router.post(
       const user = new User(req.user);
       user.secrets.push(newSecret.id);
       const updatedUser = await user.save();
+      console.log(req.route.path, req.method, newSecret);
       return res.status(201).send(newSecret);
     } catch (error) {
       return res.status(401).send({ error: error });
@@ -78,6 +77,7 @@ router.put(
         { title, description, visibility },
         { new: true }
       );
+      console.log(req.route.path, req.method, updatedSecret);
       return res.status(200).send(updatedSecret);
     } catch (error) {
       return res.status(400).send({ error: error });
@@ -103,9 +103,10 @@ router.delete("/api/users/secrets/:id", async (req, res) => {
       const user = new User(req.user);
       user.secrets = updatedSecretArray;
       const updatedUser = await user.save();
+      console.log(req.route.path, req.method, findDeletedSecret);
       return res.status(200).send(findDeletedSecret);
-    }
-    return res.status(404).send({ error: "No secret with this id exist!" });
+    } else
+      return res.status(404).send({ error: "No secret with this id exist!" });
   } catch (error) {
     return res.status(500).send({ error: error });
   }

@@ -1,33 +1,39 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useState } from 'react';
 import * as Dialog from "@radix-ui/react-dialog";
 import axios from 'axios';
 import { FaPlus } from 'react-icons/fa6';
 import { Cross1Icon } from '@radix-ui/react-icons';
+import { useSecrets } from '../context/SecretsContext';
+import { AuthenticationContext } from '../context/AuthenticationContext';
 
 const CreateNewSecretForm = () => {
+    // for radix dialog
     const [open, setOpen] = useState(false);
+
+    const { secrets, setSecrets } = useSecrets();
+    const { setIsAuthenticated } = useContext(AuthenticationContext);
+
     const handleCreate = async (e) => {
-        e.preventDefault()
-        const {
-            title,
-            description,
-            visibility
-        } = e.target;
+        e.preventDefault();
+        const createNewSecret = {
+            title: e.target.title.value,
+            description: e.target.description.value,
+            visibility: e.target.visibility.value,
+        };
         try {
-            const response = await axios.post("/api/users/secrets", {
-                title: title.value,
-                description: description.value,
-                visibility: visibility.value
-            });
+            const response = await axios.post("/api/users/secrets", createNewSecret);
             if (response.status == 201) {
                 console.log("Secret Created");
                 const newSecret = response.data;
+                if (createNewSecret.visibility == true)
+                    setSecrets([...secrets, newSecret]);
                 setOpen(false);
+                window.location.reload();
             }
-            else console.log("Internal Sever Error!");
+            else console.alert("Internal Sever Error!");
         } catch (error) {
-            console.log(error);
+            if (error.response.status == 401) setIsAuthenticated(false);
+            console.error(error);
         }
     };
     return (

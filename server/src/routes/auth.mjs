@@ -16,6 +16,7 @@ router.post(
     failureMessage: true,
   }),
   (req, res) => {
+    console.log(req.route.path, req.method);
     return res.status(200).send({ message: "You are Logged In!" });
   }
 );
@@ -39,6 +40,7 @@ router.post(
         if (error) return res.status(500).send({ error: error });
         data.password = hash;
         const createNewUser = await User.create(data);
+        console.log(req.route.path, req.method, createNewUser);
         return res.status(201).send(createNewUser);
       });
     } catch (error) {
@@ -49,9 +51,11 @@ router.post(
 );
 
 router.get("/api/auth/status", (req, res) => {
-  return req.user
-    ? res.status(200).send({ user: req.user })
-    : res.status(200).send({ message: "You are not Authenticated !" });
+  if (req.user) {
+    console.log(req.route.path, req.method, req.user);
+    return res.status(200).send(req.user);
+  } else
+    return res.status(401).send({ message: "You are not Authenticated !" });
 });
 
 router.post("/api/auth/logout", (req, res) => {
@@ -59,6 +63,7 @@ router.post("/api/auth/logout", (req, res) => {
     return res.status(401).send({ error: "You are already Logged Out!" });
   req.logout((error) => {
     if (error) return res.status(400).send({ error: error });
+    console.log(req.route.path, req.method);
     return res
       .status(200)
       .send({ message: "You are successfully logged out!" });

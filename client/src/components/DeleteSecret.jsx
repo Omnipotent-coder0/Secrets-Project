@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import * as Dialog from "@radix-ui/react-dialog";
 import axios from 'axios';
+import { SecretsContext } from '../context/SecretsContext';
+import { AuthenticationContext } from '../context/AuthenticationContext';
 
-const DeleteSecret = ({id}) => {
+const DeleteSecret = ({ id }) => {
     const [open, setOpen] = useState(false);
+    const { setIsAuthenticated } = useContext(AuthenticationContext);
+
 
     const handleDelete = async (e) => {
         e.preventDefault();
-        console.log(e.target);
         try {
             const response = await axios.delete(`/api/users/secrets/${id}`);
             if (response.status == 200) {
-                const deletedSecret = response.data;
                 setOpen(false);
-                console.log('deleted');
+                window.location.reload();
             }
-            else console.log("Internal server Error");
+            else console.alert("Internal server Error");
         } catch (error) {
-            console.log(error);
+            if (error.response.status == 401) setIsAuthenticated(false);
+            console.error(error);
             setOpen(false);
         }
     }

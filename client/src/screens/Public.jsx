@@ -1,15 +1,13 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import Card from '../components/Card';
+import { useSecrets } from '../context/SecretsContext';
 
 const Public = () => {
-    const [secrets, setSecrets] = useState([{
-        "title": "The Singing Shower Mishap",
-        "description": "Belted out my favorite song in the shower only to realize later that the window was wide open and the neighbors heard it all."
-    }]);
+    const { secrets, setSecrets } = useSecrets();
     useEffect(() => {
         const getSecrets = async () => {
-            const {data} = await axios.get("/api/secrets");
+            const { data } = await axios.get("/api/secrets");
             setSecrets(data);
         }
         getSecrets();
